@@ -12,11 +12,11 @@
       },
       {
         "package": "FlowStacks",
-        "repositoryURL": "https://www.github.com/johnpatrickmorgan/FlowStacks",
+        "repositoryURL": "https://github.com/johnpatrickmorgan/FlowStacks",
         "state": {
           "branch": null,
-          "revision": "4ed960a0ad8bb1623d18eb31a3fc483410555f73",
-          "version": "0.0.13"
+          "revision": "48a3cd8d2726ab745cb66ed21289ab01c4089186",
+          "version": "0.1.6"
         }
       },
       {

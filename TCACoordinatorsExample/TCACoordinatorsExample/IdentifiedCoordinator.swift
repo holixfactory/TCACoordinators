@@ -15,14 +15,9 @@ struct IdentifiedCoordinatorView: View {
           then: HomeView.init
         )
         CaseLet(
-          state: /ScreenState.numbersList,
-          action: ScreenAction.numbersList,
-          then: NumbersListView.init
-        )
-        CaseLet(
-          state: /ScreenState.numberDetail,
-          action: ScreenAction.numberDetail,
-          then: NumberDetailView.init
+          state: /ScreenState.number,
+          action: ScreenAction.number,
+          then: NumberCoordinatorView.init
         )
       }
     }
@@ -55,30 +50,16 @@ let identifiedCoordinatorReducer: IdentifiedCoordinatorReducer = screenReducer
   .withRouteReducer(Reducer { state, action, environment in
       switch action {
       case .routeAction(_, .home(.startTapped)):
-        state.routes.presentSheet(.numbersList(.init(numbers: Array(0..<4))), embedInNavigationView: true)
-
-      case .routeAction(_, .numbersList(.numberSelected(let number))):
-        state.routes.push(.numberDetail(.init(number: number)))
-
-      case .routeAction(_, .numberDetail(.showDouble(let number))):
-        state.routes.presentSheet(.numberDetail(.init(number: number * 2)))
-
-      case .routeAction(_, .numberDetail(.goBackTapped)):
-        state.routes.goBack()
-
-      case .routeAction(_, .numberDetail(.goBackToNumbersList)):
-        return .routeWithDelaysIfUnsupported(state.routes) {
-          $0.goBackTo(/ScreenState.numbersList)
-        }
-
-      case .routeAction(_, .numberDetail(.goBackToRootTapped)):
-        return .routeWithDelaysIfUnsupported(state.routes) {
-          $0.goBackToRoot()
-        }
-        
+        state.routes.presentSheet(.number(.list(.init(numbers: Array(0..<4)))), embedInNavigationView: true)
       default:
         break
       }
       return .none
-    }
+  }.combined(
+    with: Reducer.numberCoordinatorReducer(
+      toScreenState: { .number($0) },
+      fromScreenState: /ScreenState.number,
+      screenAction: /ScreenAction.number
+    )
   )
+)

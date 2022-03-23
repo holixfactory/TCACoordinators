@@ -15,14 +15,9 @@ struct IndexedCoordinatorView: View {
           then: HomeView.init
         )
         CaseLet(
-          state: /ScreenState.numbersList,
-          action: ScreenAction.numbersList,
-          then: NumbersListView.init
-        )
-        CaseLet(
-          state: /ScreenState.numberDetail,
-          action: ScreenAction.numberDetail,
-          then: NumberDetailView.init
+          state: /ScreenState.number,
+          action: ScreenAction.number,
+          then: NumberCoordinatorView.init
         )
       }
     }
@@ -56,23 +51,29 @@ let indexedCoordinatorReducer: IndexedCoordinatorReducer = screenReducer
     Reducer { state, action, environment in
       switch action {
       case .routeAction(_, .home(.startTapped)):
-        state.routes.push(.numbersList(.init(numbers: Array(0..<4))))
+        state.routes.presentSheet(.number(.list(.init(numbers: Array(0..<4)))), embedInNavigationView: true)
 
-      case .routeAction(_, .numbersList(.numberSelected(let number))):
-        state.routes.push(.numberDetail(.init(number: number)))
+      case .routeAction(_, .number(.list(.numberSelected(let number)))):
+        state.routes.push(.number(.detail(.init(number: number))))
 
-      case .routeAction(_, .numberDetail(.showDouble(let number))):
-        state.routes.presentSheet(.numberDetail(.init(number: number * 2)))
+      case .routeAction(_, .number(.detail(.showDouble(let number)))):
+        state.routes.presentSheet(.number(.detail(.init(number: number * 2))))
 
-      case .routeAction(_, .numberDetail(.goBackTapped)):
+      case .routeAction(_, .number(.detail(.goBackTapped))):
         state.routes.goBack()
 
-      case .routeAction(_, .numberDetail(.goBackToNumbersList)):
+      case .routeAction(_, .number(.detail(.goBackToNumbersList))):
         return .routeWithDelaysIfUnsupported(state.routes) {
-          $0.goBackTo(/ScreenState.numbersList)
+          // 이거 multiple 어떻게 함?
+          $0.goBackTo { (screen: ScreenState) in
+            guard case let .number(numberScreen) = screen, case .list(_) = numberScreen else {
+              return false
+            }
+            return true
+          }
         }
 
-      case .routeAction(_, .numberDetail(.goBackToRootTapped)):
+      case .routeAction(_, .number(.detail(.goBackToRootTapped))):
         return .routeWithDelaysIfUnsupported(state.routes) {
           $0.goBackToRoot()
         }

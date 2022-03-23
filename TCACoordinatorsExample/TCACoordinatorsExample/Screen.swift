@@ -1,27 +1,23 @@
 import Foundation
 import SwiftUI
 import ComposableArchitecture
+import TCACoordinators
+
 
 enum ScreenAction {
-  
   case home(HomeAction)
-  case numbersList(NumbersListAction)
-  case numberDetail(NumberDetailAction)
+  case number(NumberAction)
 }
 
 enum ScreenState: Equatable, Identifiable {
-  
   case home(HomeState)
-  case numbersList(NumbersListState)
-  case numberDetail(NumberDetailState)
-  
+  case number(NumberState)
+
   var id: UUID {
     switch self {
     case .home(let state):
       return state.id
-    case .numbersList(let state):
-      return state.id
-    case .numberDetail(let state):
+    case .number(let state):
       return state.id
     }
   }
@@ -36,17 +32,11 @@ let screenReducer = Reducer<ScreenState, ScreenAction, ScreenEnvironment>.combin
       action: /ScreenAction.home,
       environment: { _ in HomeEnvironment() }
     ),
-  numbersListReducer
+  numberReducer
     .pullback(
-      state: /ScreenState.numbersList,
-      action: /ScreenAction.numbersList,
-      environment: { _ in NumbersListEnvironment() }
-    ),
-  numberDetailReducer
-    .pullback(
-      state: /ScreenState.numberDetail,
-      action: /ScreenAction.numberDetail,
-      environment: { _ in NumberDetailEnvironment() }
+      state: /ScreenState.number,
+      action: /ScreenAction.number,
+      environment: { _ in }
     )
 )
 
@@ -87,110 +77,3 @@ let homeReducer = Reducer<
 }
 
 // NumbersList
-
-struct NumbersListView: View {
-  
-  let store: Store<NumbersListState, NumbersListAction>
-  
-  var body: some View {
-    WithViewStore(store) { viewStore in
-      List(viewStore.numbers, id: \.self) { number in
-        Button(
-          "\(number)",
-          action: {
-            viewStore.send(.numberSelected(number))
-          })
-      }
-    }
-    .navigationTitle("Numbers")
-  }
-}
-
-enum NumbersListAction {
-  
-  case numberSelected(Int)
-}
-
-struct NumbersListState: Equatable {
-  
-  let id = UUID()
-  let numbers: [Int]
-}
-
-struct NumbersListEnvironment {}
-
-let numbersListReducer = Reducer<
-  NumbersListState, NumbersListAction, NumbersListEnvironment
-> { state, action, environment in
-  return .none
-}
-
-// NumberDetail
-
-struct NumberDetailView: View {
-  
-  let store: Store<NumberDetailState, NumberDetailAction>
-  
-  var body: some View {
-    WithViewStore(store) { viewStore in
-      VStack(spacing: 8.0) {
-        Text("Number \(viewStore.number)")
-        Button("Increment") {
-          viewStore.send(.incrementTapped)
-        }
-        Button("Increment after delay") {
-          viewStore.send(.incrementAfterDelayTapped)
-        }
-        Button("Show double") {
-          viewStore.send(.showDouble(viewStore.number))
-        }
-        Button("Go back") {
-          viewStore.send(.goBackTapped)
-        }
-        Button("Go back to root") {
-          viewStore.send(.goBackToRootTapped)
-        }
-        Button("Go back to numbers list") {
-          viewStore.send(.goBackToNumbersList)
-        }
-      }
-      .navigationTitle("Number \(viewStore.number)")
-    }
-  }
-}
-
-enum NumberDetailAction {
-  
-  case goBackTapped
-  case goBackToRootTapped
-  case goBackToNumbersList
-  case incrementAfterDelayTapped
-  case incrementTapped
-  case showDouble(Int)
-}
-
-struct NumberDetailState: Equatable {
-  
-  let id = UUID()
-  var number: Int
-}
-
-struct NumberDetailEnvironment {}
-
-let numberDetailReducer = Reducer<NumberDetailState, NumberDetailAction, NumberDetailEnvironment> {
-  state, action, environment in
-  switch action {
-  case .goBackToRootTapped, .goBackTapped, .goBackToNumbersList, .showDouble:
-    return .none
-    
-  case .incrementAfterDelayTapped:
-    return Effect(value: NumberDetailAction.incrementTapped)
-      .delay(for: 3.0, tolerance: nil, scheduler: DispatchQueue.main, options: nil)
-      .eraseToEffect()
-    
-  case .incrementTapped:
-    state.number += 1
-    return .none
-  }
-}
-
