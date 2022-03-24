@@ -3,6 +3,36 @@ import SwiftUI
 import ComposableArchitecture
 import TCACoordinators
 
+struct ScreenView: View, Equatable {
+  static func == (lhs: ScreenView, rhs: ScreenView) -> Bool {
+    lhs.viewStore.state.id == rhs.viewStore.state.id
+  }
+
+  let store: Store<ScreenState, ScreenAction>
+  let viewStore: ViewStore<ScreenState, Never>
+
+  init(store: Store<ScreenState, ScreenAction>) {
+    self.store = store
+    self.viewStore = .init(store.actionless)
+  }
+
+  var body: some View {
+    SwitchStore(store) {
+      CaseLet(
+        state: /ScreenState.home,
+        action: ScreenAction.home,
+        then: HomeView.init
+      )
+      CaseLet(
+        state: /ScreenState.number,
+        action: ScreenAction.number,
+        then: NumberCoordinatorView.init
+      )
+    }
+  }
+
+}
+
 
 enum ScreenAction {
   case home(HomeAction)
@@ -75,5 +105,3 @@ let homeReducer = Reducer<
 > { state, action, environment in
   return .none
 }
-
-// NumbersList

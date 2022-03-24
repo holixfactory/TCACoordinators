@@ -16,8 +16,8 @@ struct NumbersListView: View {
   let store: Store<NumbersListState, NumbersListAction>
 
   var body: some View {
-    WithViewStore(store) { viewStore in
-      List(viewStore.numbers, id: \.self) { number in
+    WithViewStore(store.scope(state: \.numbers)) { viewStore in
+      List(viewStore.state, id: \.self) { number in
         Button(
           "\(number)",
           action: {
