@@ -37,7 +37,7 @@ enum NumbersListAction {
 struct NumbersListState: Equatable {
 
   let id = UUID()
-  let numbers: [Int]
+  var numbers: [Int]
 }
 
 struct NumbersListEnvironment {}
@@ -180,18 +180,33 @@ extension Reducer where State: IdentifiedRouterState, Action: IdentifiedRouterAc
   static func numberCoordinatorReducer(
     toScreenState: @escaping (_: NumberState) -> State.Screen,
     fromScreenState: CasePath<State.Screen, NumberState>,
-    screenAction: CasePath<Action.ScreenAction, NumberAction>
-  ) -> Self {
+    fromScreenAction: CasePath<Action.ScreenAction, NumberAction>
+  ) -> Self where State.Screen.ID == NumberState.ID {
     .init { (state, action, _) -> Effect in
       guard let (_, routeAction) = (/Action.routeAction).extract(from: action) else {
         return .none
       }
 
-      guard let numberAction = screenAction.extract(from: routeAction) else {
+      guard let numberAction = fromScreenAction.extract(from: routeAction) else {
         return .none
       }
 
       switch numberAction {
+      // Test: 다른 screen의 state를 변경해보자
+      case .detail(.incrementTapped):
+        if var listScreen = state.routes.compactMap({ (route) -> NumbersListState? in
+          guard let numberScreen = fromScreenState.extract(from: route.screen), case let .list(listScreen) = numberScreen else {
+            return nil
+          }
+          return listScreen
+        }).last {
+          if var currentRoute = state.routes[id: listScreen.id] {
+            listScreen.numbers = [10, 20, 30, 50, 100]
+            currentRoute.screen = toScreenState(.list(listScreen))
+            state.routes.updateOrAppend(currentRoute)
+          }
+        }
+
       case .list(.numberSelected(let number)):
         state.routes.push(toScreenState(.detail(.init(number: number))))
       case .detail(.showDouble(let number)):
