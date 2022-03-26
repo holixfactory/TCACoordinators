@@ -80,6 +80,9 @@ struct NumberDetailView: View {
           viewStore.send(.killAll)
         }
       }
+      .onAppear {
+        viewStore.send(.onAppear)
+      }
       .navigationTitle("Number \(viewStore.number)")
     }
   }
@@ -92,11 +95,11 @@ enum NumberDetailAction {
   case incrementAfterDelayTapped
   case incrementTapped
   case showDouble(Int)
+  case onAppear
   case killAll
 }
 
 struct NumberDetailState: Equatable {
-
   let id = UUID()
   var number: Int
 }
@@ -109,9 +112,14 @@ let numberDetailReducer = Reducer<NumberDetailState, NumberDetailAction, NumberD
   case .goBackToRootTapped, .goBackTapped, .goBackToNumbersList, .showDouble, .killAll:
     return .none
 
+  case .onAppear:
+    return Effect(value: NumberDetailAction.incrementTapped)
+      .delay(for: 1.0, tolerance: nil, scheduler: DispatchQueue.main, options: nil)
+      .eraseToEffect()
+
   case .incrementAfterDelayTapped:
     return Effect(value: NumberDetailAction.incrementTapped)
-      .delay(for: 3.0, tolerance: nil, scheduler: DispatchQueue.main, options: nil)
+      .delay(for: 1.0, tolerance: nil, scheduler: DispatchQueue.main, options: nil)
       .eraseToEffect()
 
   case .incrementTapped:

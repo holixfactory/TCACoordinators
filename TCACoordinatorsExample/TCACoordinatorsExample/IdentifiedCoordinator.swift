@@ -20,7 +20,6 @@ extension TCARouter where Screen: Identifiable,
           ComplexCoordinatorState.Screen.ID == ID,
           ComplexCoordinatorState.Screen == CoordinatorAction.Screen
   {
-    let complexViewStore = ViewStore(complexStore)
     self.init(
       store: complexStore.scope(state: {
         IdentifiedArray.init(
@@ -39,14 +38,14 @@ extension TCARouter where Screen: Identifiable,
       routes: { $0 },
       updateRoutes: {
         .updateRoutes(.init(uniqueElements: $0.compactMap { idOnly in
-          complexViewStore.routes[id: idOnly.id]
+          ViewStore(complexStore).routes[id: idOnly.id]
         }))
       },
       action: CoordinatorAction.routeAction,
       screenContent: { idOnlyScreen in
-        var screenState = complexViewStore.routes[id: ViewStore(idOnlyScreen).id]!.screen
+        var screenState = ViewStore(complexStore).routes[id: ViewStore(idOnlyScreen).id]!.screen
         return screenContent(idOnlyScreen.scope(state: {
-          screenState = complexViewStore.routes[id: $0.id]?.screen ?? screenState
+          screenState = ViewStore(complexStore).routes[id: $0.id]?.screen ?? screenState
           return screenState
         }))
       }
@@ -67,7 +66,7 @@ struct IdentifiedCoordinatorView: View {
       store,
       toIdOnlyScreen: { IdOnlyScreen(id: $0) }
     ) { screen in
-      ScreenView(store: screen).equatable()
+      ScreenView(store: screen)
     }
   }
 }
@@ -99,7 +98,9 @@ let identifiedCoordinatorReducer: IdentifiedCoordinatorReducer = screenReducer
       switch action {
       case .routeAction(_, .home(.startTapped)):
         state.routes.presentSheet(.number(.list(.init(numbers: Array(0..<4)))), embedInNavigationView: true)
-          default:
+      case let .updateRoutes(newRoutes):
+        print(state.routes == newRoutes)
+      default:
         break
       }
       return .none
