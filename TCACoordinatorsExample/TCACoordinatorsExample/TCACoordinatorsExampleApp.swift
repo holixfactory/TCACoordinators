@@ -23,7 +23,7 @@ struct MainTabCoordinatorView: View {
   let store: Store<MainTabCoordinatorState, MainTabCoordinatorAction>
 
   var body: some View {
-    WithViewStore(store) { _ in
+//    WithViewStore(store) { _ in
       TabView {
         IndexedCoordinatorView(
           store: store.scope(
@@ -45,7 +45,7 @@ struct MainTabCoordinatorView: View {
         ).tabItem { Text("App") }
       }
     }
-  }
+//  }
 }
 
 enum MainTabCoordinatorAction {
